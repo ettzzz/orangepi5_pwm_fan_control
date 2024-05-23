@@ -4,7 +4,7 @@ After = network.target
  
 [Service]
 Type = simple
-ExecStart = /home/orangepi/orangepizero2_pwm_fan_control/fan_control.sh 3
+ExecStart = /home/orangepi/git_repos/orangepi5_pwm_fan_control/fan_control.sh 0
 User = root
 Group = root
 Restart = on-failure

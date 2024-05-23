@@ -16,11 +16,10 @@ logger.setLevel(logging.INFO)
 
 
 # default values and arguments parsing
-parser = argparse.ArgumentParser(prog='Orange Pi Zero 2 fan control')
+parser = argparse.ArgumentParser(prog='Orange Pi 5 fan control')
 parser.add_argument('pwn_number',
-                    default='3',
+                    default='0',
                     type=int,
-                    choices=[1, 2, 3, 4],
                     metavar="PWM_NUMBER",
                     help="Default %(default)s. One of 4 PWM. See orange pi zero 2 user manual.")
 parser.add_argument('-i', '--init_power',
@@ -34,23 +33,23 @@ parser.add_argument('-f', '--pwm_freq',
                     type=int,
                     help="Default %(default)s Hz. PWM frequency [Hz].")
 parser.add_argument('-t', '--pwm_threshold',
-                    default='380',
+                    default='400',
                     type=int,
                     help="Default %(default)s Hz. Minimal frequency [Hz] when fan start to rotate.")
 parser.add_argument('--min_temp',
-                    default='45',
+                    default='50',
                     type=int,
                     metavar="MIN_TEMP",
                     choices=range(0, 100),
                     help="Default %(default)s °C. Below this temp [°C] fan is off.")
 parser.add_argument('--max_temp',
-                    default='60',
+                    default='70',
                     type=int,
                     metavar="MAX_TEMP",
                     choices=range(0, 100),
                     help="Default %(default)s °C. Above this temp [°C] fan is 100 %% power.")
 parser.add_argument('--cycle_time',
-                    default='5',
+                    default='10',
                     type=int,
                     metavar="CYCLE_TIME",
                     choices=range(1, 300),
@@ -88,8 +87,8 @@ def set_fan_power(power_percent: float) -> None:
         pwm_duty_cycle = int((power_percent / 100) * (PWM_FREQ - PWM_FREQ_THRESHOLD)
                               + PWM_FREQ_THRESHOLD)
     logger.info(f"SET PWM duty cycle = {pwm_duty_cycle} Hz")
-    with open(f"/sys/class/pwm/pwmchip0/pwm{PWM_NUMBER}/duty_cycle", "w+") as dcf:
-            dcf.write(str(pwm_duty_cycle))
+    with open(f"/sys/class/pwm/pwmchip2/pwm{PWM_NUMBER}/duty_cycle", "w+") as dcf:
+            dcf.write(str(pwm_duty_cycle*10_000))
     logger.info(f"PWM duty cycle is setted to {pwm_duty_cycle} Hz")
     
 def process_fan_power(cpu_temp: float) -> float:
@@ -102,18 +101,18 @@ def process_fan_power(cpu_temp: float) -> float:
 def pwm_turn_on() -> None:
     logger.info(f"PWM {PWM_NUMBER} is turning on...")
     
-    with open(f"/sys/class/pwm/pwmchip0/pwm{PWM_NUMBER}/period", "w+") as period_f:
-        period_f.write(str(PWM_FREQ))
+    with open(f"/sys/class/pwm/pwmchip2/pwm{PWM_NUMBER}/period", "w+") as period_f:
+        period_f.write(str(PWM_FREQ*10_000)) ## Orangepi5's clock frequency is different
     logger.info(f"PWM frequency is setted to {PWM_FREQ} Hz.")
 
     set_fan_power(INITIAL_FAN_POWER)
 
-    with open(f"/sys/class/pwm/pwmchip0/pwm{PWM_NUMBER}/enable", "w+") as enable_f:
+    with open(f"/sys/class/pwm/pwmchip2/pwm{PWM_NUMBER}/enable", "w+") as enable_f:
         enable_f.write("1")
     logger.info("PWM turned on.")
 
 def pwm_turn_off() -> None:
-    with open(f"/sys/class/pwm/pwmchip0/pwm{PWM_NUMBER}/enable", "w+") as enable_f:
+    with open(f"/sys/class/pwm/pwmchip2/pwm{PWM_NUMBER}/enable", "w+") as enable_f:
         enable_f.write("0")
     logger.info(f"PWM {PWM_NUMBER} turned off.")
 
